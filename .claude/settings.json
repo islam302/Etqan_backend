@@ -1,0 +1,46 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C /d/CODING/Etqan/Etqan_backend status --short)",
+      "Bash(.venv/Scripts/python.exe -m pip install --upgrade pip -q)",
+      "Bash(.venv/Scripts/python.exe -m pip install -r requirements-dev.txt -q)",
+      "Bash(.venv/Scripts/python.exe manage.py check)",
+      "Bash(.venv/Scripts/python.exe manage.py makemigrations)",
+      "Bash(.venv/Scripts/python.exe manage.py makemigrations accounts services projects blog testimonials pages clients contact site_settings)",
+      "Bash(.venv/Scripts/python.exe manage.py migrate)",
+      "Bash(.venv/Scripts/python.exe manage.py seed_demo)",
+      "Bash(.venv/Scripts/python.exe -m pytest)",
+      "Bash(.venv/Scripts/python.exe manage.py spectacular --file /tmp/schema.yml)",
+      "Bash(.venv/Scripts/python.exe manage.py check --deploy --settings=config.settings.prod)",
+      "Bash(.venv/Scripts/python.exe manage.py runserver 8009 --noreload)",
+      "Bash(kill %1)",
+      "Bash(grep -iA15 \"error\\\\|traceback\\\\|exception\" /tmp/srv.log)",
+      "Bash(.venv/Scripts/python.exe manage.py runserver 8010 --noreload 2>/tmp/srv2.log & *)",
+      "Bash(.venv/Scripts/python.exe -m flake8 apps config conftest.py)",
+      "Bash(echo \"=== flake8 exit: $? ===\")",
+      "Bash(.venv/Scripts/python.exe -m black --check apps config conftest.py)",
+      "Bash(.venv/Scripts/python.exe -m isort --check-only apps config conftest.py)",
+      "Bash(.venv/Scripts/python.exe -m isort apps config conftest.py)",
+      "Bash(.venv/Scripts/python.exe -m black apps config conftest.py)",
+      "Bash(.venv/Scripts/python.exe -m pytest -q)",
+      "Bash(.venv/Scripts/python.exe -m pytest -q -p no:warnings)",
+      "Bash(.venv/Scripts/python.exe -m pytest -p no:warnings)",
+      "PowerShell(docker version --format 'Client: {{.Client.Version}} | Server: {{if .Server}}{{.Server.Version}}{{else}}NOT RUNNING{{end}}')",
+      "Bash(.venv/Scripts/python.exe -c \"import json; d=json.load\\(open\\('ETQAN.postman_collection.json', encoding='utf-8'\\)\\); print\\('Valid JSON. Folders:', len\\(d['item']\\)\\); print\\('Requests:', sum\\(len\\(f['item']\\) for f in d['item']\\)\\)\")",
+      "Bash(.venv/Scripts/python.exe -c ' *)",
+      "Bash(SECRET_KEY=test-key SECURE_SSL_REDIRECT=False .venv/Scripts/python.exe -c ' *)",
+      "PowerShell(docker compose ps --format \"table {{.Service}}\\\\t{{.State}}\\\\t{{.Ports}}\")",
+      "PowerShell(docker compose exec -T web python manage.py seed_demo)",
+      "Bash(.venv/Scripts/python.exe -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('access token:', d['access'][:32]+'...'\\); print\\('user:', d['user']\\)\")",
+      "Bash(.venv/Scripts/python.exe manage.py shell -c ' *)",
+      "Bash(.venv/Scripts/python.exe -m isort apps)",
+      "Bash(.venv/Scripts/python.exe -m black apps -q)",
+      "Bash(.venv/Scripts/python.exe -m flake8 apps)",
+      "PowerShell(docker compose ps --format \"table {{.Service}}\\\\t{{.State}}\")",
+      "Bash(.venv/Scripts/python.exe -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('status: OK' if 'access' in d else d\\); print\\('user id \\(UUID\\):', d['user']['id']\\)\")"
+    ],
+    "additionalDirectories": [
+      "\\tmp"
+    ]
+  }
+}

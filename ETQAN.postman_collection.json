@@ -1,0 +1,562 @@
+{
+  "info": {
+    "name": "ETQAN Backend API",
+    "_postman_id": "etqan-backend-collection",
+    "description": "Complete collection for the ETQAN software-agency REST API (Django + DRF).\n\n## Getting started\n1. Import this collection.\n2. Set the collection variable `base_url` (default `http://localhost:8000`).\n3. Run **Auth > Login** — the access & refresh tokens are captured automatically into collection variables, so all admin (write) requests below are pre-authorized.\n\nPublic GET endpoints need no auth. Write endpoints (POST/PUT/PATCH/DELETE) send `Authorization: Bearer {{access_token}}`.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8000", "type": "string" },
+    { "key": "access_token", "value": "", "type": "string" },
+    { "key": "refresh_token", "value": "", "type": "string" },
+    { "key": "admin_email", "value": "admin@etqan.agency", "type": "string" },
+    { "key": "admin_password", "value": "Admin12345!", "type": "string" },
+    { "key": "project_slug", "value": "nimbus-analytics-platform", "type": "string" },
+    { "key": "service_slug", "value": "web-development", "type": "string" },
+    { "key": "blog_slug", "value": "building-the-future-of-software", "type": "string" },
+    { "key": "message_id", "value": "", "type": "string", "description": "A ContactMessage UUID — copy one from the 'List messages' response." }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.code === 200);",
+                  "const data = pm.response.json();",
+                  "if (data.access) {",
+                  "  pm.collectionVariables.set('access_token', data.access);",
+                  "  console.log('access_token saved');",
+                  "}",
+                  "if (data.refresh) {",
+                  "  pm.collectionVariables.set('refresh_token', data.refresh);",
+                  "  console.log('refresh_token saved');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/auth/login/", "host": ["{{base_url}}"], "path": ["api", "auth", "login", ""] },
+            "description": "Obtain a JWT access/refresh pair. On success the tokens are auto-saved to collection variables."
+          }
+        },
+        {
+          "name": "Refresh token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data.access) pm.collectionVariables.set('access_token', data.access);",
+                  "if (data.refresh) pm.collectionVariables.set('refresh_token', data.refresh);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"refresh\": \"{{refresh_token}}\"\n}" },
+            "url": { "raw": "{{base_url}}/api/auth/refresh/", "host": ["{{base_url}}"], "path": ["api", "auth", "refresh", ""] }
+          }
+        },
+        {
+          "name": "Me (current admin)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/api/auth/me/", "host": ["{{base_url}}"], "path": ["api", "auth", "me", ""] }
+          }
+        },
+        {
+          "name": "Logout (blacklist refresh)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"refresh\": \"{{refresh_token}}\"\n}" },
+            "url": { "raw": "{{base_url}}/api/auth/logout/", "host": ["{{base_url}}"], "path": ["api", "auth", "logout", ""] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Services",
+      "item": [
+        {
+          "name": "List services (public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/services/?search=&ordering=order",
+              "host": ["{{base_url}}"],
+              "path": ["api", "services", ""],
+              "query": [
+                { "key": "search", "value": "" },
+                { "key": "ordering", "value": "order" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Retrieve service (public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/services/{{service_slug}}/", "host": ["{{base_url}}"], "path": ["api", "services", "{{service_slug}}", ""] }
+          }
+        },
+        {
+          "name": "Create service (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Cloud & DevOps\",\n  \"short_description\": \"Scalable cloud infrastructure and CI/CD.\",\n  \"long_description\": \"We design, deploy and operate cloud infrastructure.\",\n  \"icon\": \"cloud\",\n  \"features\": [\"AWS\", \"Kubernetes\", \"CI/CD\", \"Monitoring\"],\n  \"order\": 5,\n  \"is_active\": true\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/services/", "host": ["{{base_url}}"], "path": ["api", "services", ""] }
+          }
+        },
+        {
+          "name": "Update service (admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"short_description\": \"Updated tagline.\"\n}" },
+            "url": { "raw": "{{base_url}}/api/services/{{service_slug}}/", "host": ["{{base_url}}"], "path": ["api", "services", "{{service_slug}}", ""] }
+          }
+        },
+        {
+          "name": "Delete service (admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/api/services/{{service_slug}}/", "host": ["{{base_url}}"], "path": ["api", "services", "{{service_slug}}", ""] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Projects",
+      "item": [
+        {
+          "name": "List projects (public, filter/search)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/projects/?category=&featured=&search=&ordering=order&page=1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "projects", ""],
+              "query": [
+                { "key": "category", "value": "", "description": "web | mobile | uiux | enterprise" },
+                { "key": "featured", "value": "", "description": "true to show only featured" },
+                { "key": "search", "value": "" },
+                { "key": "ordering", "value": "order" },
+                { "key": "page", "value": "1" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Retrieve project (public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/projects/{{project_slug}}/", "host": ["{{base_url}}"], "path": ["api", "projects", "{{project_slug}}", ""] }
+          }
+        },
+        {
+          "name": "Create project (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Orbit CRM\",\n  \"category\": \"enterprise\",\n  \"summary\": \"A CRM tailored for B2B sales teams.\",\n  \"description\": \"Full write-up of the Orbit CRM case study.\",\n  \"tech_stack\": [\"Django\", \"React\", \"PostgreSQL\"],\n  \"client_name\": \"Orbit Inc\",\n  \"live_url\": \"https://example.com\",\n  \"is_featured\": true,\n  \"published\": true,\n  \"order\": 7\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/projects/", "host": ["{{base_url}}"], "path": ["api", "projects", ""] }
+          }
+        },
+        {
+          "name": "Create project with cover image (admin, form-data)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "title", "value": "Halo Portal", "type": "text" },
+                { "key": "category", "value": "web", "type": "text" },
+                { "key": "summary", "value": "A customer portal with SSO.", "type": "text" },
+                { "key": "published", "value": "true", "type": "text" },
+                { "key": "cover_image", "type": "file", "src": [] }
+              ]
+            },
+            "url": { "raw": "{{base_url}}/api/projects/", "host": ["{{base_url}}"], "path": ["api", "projects", ""] },
+            "description": "Use multipart/form-data to upload cover_image. Select a file for the cover_image field."
+          }
+        },
+        {
+          "name": "Update project (admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"is_featured\": false\n}" },
+            "url": { "raw": "{{base_url}}/api/projects/{{project_slug}}/", "host": ["{{base_url}}"], "path": ["api", "projects", "{{project_slug}}", ""] }
+          }
+        },
+        {
+          "name": "Delete project (admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/api/projects/{{project_slug}}/", "host": ["{{base_url}}"], "path": ["api", "projects", "{{project_slug}}", ""] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Blog",
+      "item": [
+        {
+          "name": "List posts (public, filter by tag/search)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/blog/?tag=&search=&ordering=-published_at&page=1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "blog", ""],
+              "query": [
+                { "key": "tag", "value": "", "description": "tag slug, e.g. engineering" },
+                { "key": "search", "value": "" },
+                { "key": "ordering", "value": "-published_at" },
+                { "key": "page", "value": "1" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Retrieve post (public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/blog/{{blog_slug}}/", "host": ["{{base_url}}"], "path": ["api", "blog", "{{blog_slug}}", ""] }
+          }
+        },
+        {
+          "name": "Create post (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Shipping Faster with DRF\",\n  \"excerpt\": \"How we structure Django REST APIs.\",\n  \"body\": \"# Shipping Faster\\n\\nMarkdown body content here.\",\n  \"tag_slugs\": [\"Engineering\", \"Django\"],\n  \"published\": true,\n  \"meta_title\": \"Shipping Faster with DRF\",\n  \"meta_description\": \"How we structure Django REST APIs.\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/blog/", "host": ["{{base_url}}"], "path": ["api", "blog", ""] },
+            "description": "author is auto-set to the requesting admin. tag_slugs creates tags on the fly."
+          }
+        },
+        {
+          "name": "Update post (admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"published\": false\n}" },
+            "url": { "raw": "{{base_url}}/api/blog/{{blog_slug}}/", "host": ["{{base_url}}"], "path": ["api", "blog", "{{blog_slug}}", ""] }
+          }
+        },
+        {
+          "name": "Delete post (admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/api/blog/{{blog_slug}}/", "host": ["{{base_url}}"], "path": ["api", "blog", "{{blog_slug}}", ""] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Testimonials",
+      "item": [
+        {
+          "name": "List testimonials (public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/testimonials/", "host": ["{{base_url}}"], "path": ["api", "testimonials", ""] }
+          }
+        },
+        {
+          "name": "Create testimonial (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quote\": \"ETQAN delivered beyond expectations.\",\n  \"author_name\": \"Karim Adel\",\n  \"author_role\": \"COO, Example Co\",\n  \"order\": 4,\n  \"is_active\": true\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/testimonials/", "host": ["{{base_url}}"], "path": ["api", "testimonials", ""] }
+          }
+        },
+        {
+          "name": "Update testimonial (admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"is_active\": false\n}" },
+            "url": { "raw": "{{base_url}}/api/testimonials/1/", "host": ["{{base_url}}"], "path": ["api", "testimonials", "1", ""] }
+          }
+        },
+        {
+          "name": "Delete testimonial (admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/api/testimonials/1/", "host": ["{{base_url}}"], "path": ["api", "testimonials", "1", ""] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Team",
+      "item": [
+        {
+          "name": "List team (public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/team/", "host": ["{{base_url}}"], "path": ["api", "team", ""] }
+          }
+        },
+        {
+          "name": "Create team member (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Mona Salah\",\n  \"role\": \"Backend Engineer\",\n  \"bio\": \"Django and distributed systems.\",\n  \"socials\": {\"github\": \"https://github.com/mona\", \"linkedin\": \"https://linkedin.com/in/mona\"},\n  \"order\": 4,\n  \"is_active\": true\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/team/", "host": ["{{base_url}}"], "path": ["api", "team", ""] }
+          }
+        },
+        {
+          "name": "Update team member (admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"role\": \"Senior Backend Engineer\"\n}" },
+            "url": { "raw": "{{base_url}}/api/team/1/", "host": ["{{base_url}}"], "path": ["api", "team", "1", ""] }
+          }
+        },
+        {
+          "name": "Delete team member (admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/api/team/1/", "host": ["{{base_url}}"], "path": ["api", "team", "1", ""] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Clients",
+      "item": [
+        {
+          "name": "List clients (public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/clients/", "host": ["{{base_url}}"], "path": ["api", "clients", ""] }
+          }
+        },
+        {
+          "name": "Create client (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Globex\",\n  \"website\": \"https://example.com\",\n  \"order\": 7,\n  \"is_active\": true\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/clients/", "host": ["{{base_url}}"], "path": ["api", "clients", ""] }
+          }
+        },
+        {
+          "name": "Delete client (admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/api/clients/1/", "host": ["{{base_url}}"], "path": ["api", "clients", "1", ""] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Site Settings",
+      "item": [
+        {
+          "name": "Get settings (public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/settings/", "host": ["{{base_url}}"], "path": ["api", "settings", ""] }
+          }
+        },
+        {
+          "name": "Update settings (admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hero_title\": \"Building the Future of Software\",\n  \"hero_subtitle\": \"We craft web, mobile and enterprise products.\",\n  \"stats\": {\"projects\": 120, \"clients\": 48, \"retention\": 96, \"awards\": 14},\n  \"social_links\": {\"linkedin\": \"https://linkedin.com/company/etqan\"}\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/settings/", "host": ["{{base_url}}"], "path": ["api", "settings", ""] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Contact",
+      "item": [
+        {
+          "name": "Submit message (public, throttled 5/hr)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Doe\",\n  \"email\": \"jane@example.com\",\n  \"subject\": \"New project inquiry\",\n  \"message\": \"We would like to build a mobile app with your team.\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/contact/", "host": ["{{base_url}}"], "path": ["api", "contact", ""] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Messages (admin)",
+      "item": [
+        {
+          "name": "List messages (admin, filter unread)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/messages/?is_read=&search=&ordering=-created_at",
+              "host": ["{{base_url}}"],
+              "path": ["api", "messages", ""],
+              "query": [
+                { "key": "is_read", "value": "", "description": "true | false" },
+                { "key": "search", "value": "" },
+                { "key": "ordering", "value": "-created_at" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Retrieve message (admin)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/api/messages/{{message_id}}/", "host": ["{{base_url}}"], "path": ["api", "messages", "{{message_id}}", ""] }
+          }
+        },
+        {
+          "name": "Mark message read (admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/api/messages/{{message_id}}/mark-read/", "host": ["{{base_url}}"], "path": ["api", "messages", "{{message_id}}", "mark-read", ""] }
+          }
+        },
+        {
+          "name": "Delete message (admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/api/messages/{{message_id}}/", "host": ["{{base_url}}"], "path": ["api", "messages", "{{message_id}}", ""] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Docs",
+      "item": [
+        {
+          "name": "OpenAPI schema",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/schema/", "host": ["{{base_url}}"], "path": ["api", "schema", ""] }
+          }
+        },
+        {
+          "name": "Swagger UI (open in browser)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/docs/", "host": ["{{base_url}}"], "path": ["api", "docs", ""] }
+          }
+        }
+      ]
+    }
+  ]
+}
