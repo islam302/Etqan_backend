@@ -1,15 +1,15 @@
-"""Serializers for testimonials."""
+"""Serializers for opinions."""
 
 from __future__ import annotations
 
 from rest_framework import serializers
 
-from .models import Testimonial
+from .models import Opinion
 
 
-class TestimonialSerializer(serializers.ModelSerializer):
+class OpinionSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Testimonial
+        model = Opinion
         fields = [
             "id",
             "quote",

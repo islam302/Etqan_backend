@@ -1,4 +1,4 @@
-"""Admin for testimonials."""
+"""Admin for opinions."""
 
 from __future__ import annotations
 
@@ -6,11 +6,11 @@ from django.contrib import admin
 
 from apps.common.admin import thumbnail
 
-from .models import Testimonial
+from .models import Opinion
 
 
-@admin.register(Testimonial)
-class TestimonialAdmin(admin.ModelAdmin):
+@admin.register(Opinion)
+class OpinionAdmin(admin.ModelAdmin):
     list_display = (
         "author_name",
         "avatar_preview",

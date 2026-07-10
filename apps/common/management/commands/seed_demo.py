@@ -21,11 +21,11 @@ from django.utils import timezone
 from apps.blog.models import BlogPost, Tag
 from apps.clients.models import Client
 from apps.contact.models import ContactMessage
+from apps.opinions.models import Opinion
 from apps.pages.models import TeamMember
 from apps.projects.models import Project, ProjectCategory
 from apps.services.models import Service
 from apps.settings.models import SiteSettings
-from apps.testimonials.models import Testimonial
 
 User = get_user_model()
 
@@ -51,7 +51,7 @@ class Command(BaseCommand):
         self._seed_services()
         self._seed_projects()
         self._seed_blog(admin)
-        self._seed_testimonials()
+        self._seed_opinions()
         self._seed_team()
         self._seed_clients()
         self._seed_messages()
@@ -69,7 +69,7 @@ class Command(BaseCommand):
             Service,
             BlogPost,
             Tag,
-            Testimonial,
+            Opinion,
             TeamMember,
             Client,
             ContactMessage,
@@ -271,8 +271,8 @@ class Command(BaseCommand):
             post.tags.set(tags)
         self.stdout.write(f"Seeded {len(posts)} blog posts.")
 
-    def _seed_testimonials(self) -> None:
-        testimonials = [
+    def _seed_opinions(self) -> None:
+        opinions = [
             {
                 "quote": "ETQAN turned our vision into a product our customers love.",
                 "author_name": "Sara Al-Mansour",
@@ -292,11 +292,11 @@ class Command(BaseCommand):
                 "order": 3,
             },
         ]
-        for data in testimonials:
-            Testimonial.objects.update_or_create(
+        for data in opinions:
+            Opinion.objects.update_or_create(
                 author_name=data["author_name"], defaults=data
             )
-        self.stdout.write(f"Seeded {len(testimonials)} testimonials.")
+        self.stdout.write(f"Seeded {len(opinions)} opinions.")
 
     def _seed_team(self) -> None:
         members = [

@@ -72,3 +72,60 @@ class TestAuthEndpoints:
         new_refresh = refreshed.data.get("refresh", refresh)
         logout = api.post("/api/auth/logout/", {"refresh": new_refresh}, format="json")
         assert logout.status_code == 205
+
+
+class TestRegistration:
+    payload = {
+        "email": "new@user.com",
+        "username": "newbie",
+        "name": "New User",
+        "password": "Str0ngPass!23",
+    }
+
+    def test_register_creates_user_and_returns_tokens(self, api):
+        resp = api.post("/api/auth/register/", self.payload, format="json")
+        assert resp.status_code == 201
+        assert "access" in resp.data and "refresh" in resp.data
+        assert resp.data["user"]["username"] == "newbie"
+        user = User.objects.get(email="new@user.com")
+        assert user.check_password("Str0ngPass!23")
+
+    def test_duplicate_email_rejected(self, api):
+        api.post("/api/auth/register/", self.payload, format="json")
+        resp = api.post("/api/auth/register/", self.payload, format="json")
+        assert resp.status_code == 400
+        assert "email" in resp.data
+
+    def test_weak_password_rejected(self, api):
+        resp = api.post(
+            "/api/auth/register/",
+            {**self.payload, "password": "123"},
+            format="json",
+        )
+        assert resp.status_code == 400
+        assert "password" in resp.data
+
+
+class TestUsernameLogin:
+    def test_login_with_username(self, api):
+        User.objects.create_user(
+            email="handle@user.com", username="cooldev", password="pass12345"
+        )
+        resp = api.post(
+            "/api/auth/login/",
+            {"username": "cooldev", "password": "pass12345"},
+            format="json",
+        )
+        assert resp.status_code == 200
+        assert resp.data["user"]["username"] == "cooldev"
+
+    def test_login_with_generic_login_field(self, api):
+        User.objects.create_user(
+            email="handle2@user.com", username="devtwo", password="pass12345"
+        )
+        resp = api.post(
+            "/api/auth/login/",
+            {"login": "devtwo", "password": "pass12345"},
+            format="json",
+        )
+        assert resp.status_code == 200

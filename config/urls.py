@@ -12,11 +12,11 @@ from rest_framework.routers import DefaultRouter
 from apps.blog.views import BlogPostViewSet
 from apps.clients.views import ClientViewSet
 from apps.contact.views import ContactMessageViewSet, ContactSubmitView
+from apps.opinions.views import OpinionViewSet
 from apps.pages.views import TeamMemberViewSet
 from apps.projects.views import ProjectViewSet
 from apps.services.views import ServiceViewSet
 from apps.settings.views import SiteSettingsView
-from apps.testimonials.views import TestimonialViewSet
 
 # ---------------------------------------------------------------------------
 # API router (ViewSets)
@@ -25,7 +25,7 @@ router = DefaultRouter()
 router.register("services", ServiceViewSet, basename="service")
 router.register("projects", ProjectViewSet, basename="project")
 router.register("blog", BlogPostViewSet, basename="blogpost")
-router.register("testimonials", TestimonialViewSet, basename="testimonial")
+router.register("opinions", OpinionViewSet, basename="opinion")
 router.register("team", TeamMemberViewSet, basename="teammember")
 router.register("clients", ClientViewSet, basename="client")
 router.register("messages", ContactMessageViewSet, basename="message")

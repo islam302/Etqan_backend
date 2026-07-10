@@ -68,7 +68,7 @@ LOCAL_APPS = [
     "apps.services",
     "apps.projects",
     "apps.blog",
-    "apps.testimonials",
+    "apps.opinions",
     "apps.pages",
     "apps.clients",
     "apps.contact",
@@ -217,6 +217,18 @@ SIMPLE_JWT = {
 }
 
 # ---------------------------------------------------------------------------
+# Social authentication (server-side provider token verification)
+# ---------------------------------------------------------------------------
+# GOOGLE_CLIENT_ID / APPLE_CLIENT_ID accept a comma-separated list so multiple
+# platforms (web, iOS, Android) can each present their own client/audience id.
+SOCIAL_AUTH = {
+    "GOOGLE_CLIENT_IDS": env.list("GOOGLE_CLIENT_ID", default=[]),
+    "APPLE_CLIENT_IDS": env.list("APPLE_CLIENT_ID", default=[]),
+    "FACEBOOK_APP_ID": env("FACEBOOK_APP_ID", default=""),
+    "FACEBOOK_APP_SECRET": env("FACEBOOK_APP_SECRET", default=""),
+}
+
+# ---------------------------------------------------------------------------
 # drf-spectacular (OpenAPI docs)
 # ---------------------------------------------------------------------------
 SPECTACULAR_SETTINGS = {
@@ -242,8 +254,13 @@ EMAIL_PORT = env("EMAIL_PORT")
 EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
 EMAIL_USE_TLS = env("EMAIL_USE_TLS")
-DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="no-reply@etqan.agency")
-CONTACT_NOTIFY_EMAIL = env("CONTACT_NOTIFY_EMAIL", default="hello@etqan.agency")
+DEFAULT_FROM_EMAIL = env(
+    "DEFAULT_FROM_EMAIL", default="etqan.agency.company@gmail.com"
+)
+# Where new contact-form submissions are emailed (the agency inbox).
+CONTACT_NOTIFY_EMAIL = env(
+    "CONTACT_NOTIFY_EMAIL", default="etqan.agency.company@gmail.com"
+)
 
 # Use SMTP only when a host is configured; otherwise fall back so messages
 # are still saved without raising during development.
@@ -268,7 +285,7 @@ JAZZMIN_SETTINGS = {
         "projects",
         "services",
         "blog",
-        "testimonials",
+        "opinions",
         "pages",
         "clients",
         "contact",
@@ -280,7 +297,7 @@ JAZZMIN_SETTINGS = {
         "services.Service": "fas fa-cogs",
         "blog.BlogPost": "fas fa-newspaper",
         "blog.Tag": "fas fa-tag",
-        "testimonials.Testimonial": "fas fa-quote-right",
+        "opinions.Opinion": "fas fa-quote-right",
         "pages.TeamMember": "fas fa-users",
         "clients.Client": "fas fa-handshake",
         "contact.ContactMessage": "fas fa-envelope",

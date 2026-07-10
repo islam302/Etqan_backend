@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 
 from django.conf import settings
-from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives
 from drf_spectacular.utils import extend_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
@@ -24,8 +24,9 @@ logger = logging.getLogger(__name__)
 class ContactSubmitView(CreateAPIView):
     """Public endpoint to submit a contact message.
 
-    Always saves the message; additionally emails a notification when SMTP
-    is configured. Throttled per IP (see the ``contact`` throttle scope).
+    Always saves the message and emails a notification to the agency inbox
+    (``CONTACT_NOTIFY_EMAIL``) via the configured email backend. Throttled per
+    IP (see the ``contact`` throttle scope).
     """
 
     serializer_class = ContactMessageCreateSerializer
@@ -38,19 +39,31 @@ class ContactSubmitView(CreateAPIView):
 
     @staticmethod
     def _notify(message: ContactMessage) -> None:
-        """Best-effort email notification; failures never break the request."""
-        if not getattr(settings, "EMAIL_HOST", ""):
+        """Email the agency inbox about a new message.
+
+        Best-effort: any failure is logged but never breaks the submission,
+        so the message is always saved. ``Reply-To`` is set to the visitor so
+        the team can reply to them directly from the notification.
+        """
+        recipient = getattr(settings, "CONTACT_NOTIFY_EMAIL", "")
+        if not recipient:
             return
         try:
-            send_mail(
+            email = EmailMultiAlternatives(
                 subject=f"[ETQAN] New contact message: {message.subject or 'No subject'}",
-                message=(
-                    f"From: {message.name} <{message.email}>\n\n{message.message}"
+                body=(
+                    "You received a new message from the ETQAN website.\n\n"
+                    f"Name:    {message.name}\n"
+                    f"Email:   {message.email}\n"
+                    f"Subject: {message.subject or '—'}\n"
+                    f"Sent at: {message.created_at:%Y-%m-%d %H:%M UTC}\n\n"
+                    f"Message:\n{message.message}\n"
                 ),
                 from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[settings.CONTACT_NOTIFY_EMAIL],
-                fail_silently=True,
+                to=[recipient],
+                reply_to=[message.email],
             )
+            email.send(fail_silently=True)
         except Exception:  # pragma: no cover - defensive
             logger.exception("Failed to send contact notification email")
 

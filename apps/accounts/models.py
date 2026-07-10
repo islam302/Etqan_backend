@@ -20,6 +20,16 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField("email address", unique=True, db_index=True)
+    # Unique handle. Nullable so social sign-ups (which may not supply one) and
+    # existing flows work; the API auto-generates one when omitted.
+    username = models.CharField(
+        max_length=150,
+        unique=True,
+        null=True,
+        blank=True,
+        db_index=True,
+        help_text="Public handle; may be used to log in instead of email.",
+    )
     name = models.CharField(max_length=150, blank=True)
 
     is_active = models.BooleanField(default=True)
@@ -49,7 +59,41 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.is_staff or self.is_superuser
 
     def get_short_name(self) -> str:
-        return self.name or self.email.split("@")[0]
+        return self.name or (self.username or self.email.split("@")[0])
 
     def get_full_name(self) -> str:
         return self.name or self.email
+
+
+class SocialAccount(models.Model):
+    """Links a third-party identity (Google/Apple/Facebook) to a local user.
+
+    Uniqueness on ``(provider, uid)`` ensures each external identity maps to a
+    single account and repeated logins resolve to the same user.
+    """
+
+    class Provider(models.TextChoices):
+        GOOGLE = "google", "Google"
+        APPLE = "apple", "Apple"
+        FACEBOOK = "facebook", "Facebook"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        "accounts.User", related_name="social_accounts", on_delete=models.CASCADE
+    )
+    provider = models.CharField(max_length=20, choices=Provider.choices, db_index=True)
+    uid = models.CharField(max_length=255, help_text="Provider's stable user id.")
+    extra_email = models.EmailField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "social account"
+        verbose_name_plural = "social accounts"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["provider", "uid"], name="unique_provider_uid"
+            )
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.get_provider_display()}:{self.uid}"

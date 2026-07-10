@@ -22,6 +22,17 @@ class TestContactSubmit:
         assert resp.status_code == 201
         assert ContactMessage.objects.filter(email="jane@example.com").exists()
 
+    def test_submit_emails_agency_inbox(self, api, settings, mailoutbox):
+        settings.CONTACT_NOTIFY_EMAIL = "etqan.agency.company@gmail.com"
+        resp = api.post("/api/contact/", VALID, format="json")
+        assert resp.status_code == 201
+        assert len(mailoutbox) == 1
+        sent = mailoutbox[0]
+        assert sent.to == ["etqan.agency.company@gmail.com"]
+        # Reply-To is the visitor so the team can reply directly.
+        assert sent.reply_to == ["jane@example.com"]
+        assert "Jane" in sent.body and "build an app" in sent.body
+
     def test_short_message_rejected(self, api):
         resp = api.post("/api/contact/", {**VALID, "message": "hi"}, format="json")
         assert resp.status_code == 400
