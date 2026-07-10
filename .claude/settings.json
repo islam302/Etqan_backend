@@ -60,7 +60,8 @@
       "Bash(.venv/Scripts/python.exe manage.py spectacular --file /tmp/s.yml)",
       "Bash(.venv/Scripts/python.exe -m black apps/contact -q)",
       "Bash(.venv/Scripts/python.exe -m flake8 apps/contact)",
-      "Bash(.venv/Scripts/python.exe -m pytest apps/contact -p no:warnings -q)"
+      "Bash(.venv/Scripts/python.exe -m pytest apps/contact -p no:warnings -q)",
+      "PowerShell(docker compose exec -T web python -c \"from django.conf import settings; import django; django.setup\\(\\) if not settings.configured else None; print\\('EMAIL_BACKEND =', settings.EMAIL_BACKEND\\); print\\('EMAIL_HOST    =', repr\\(settings.EMAIL_HOST\\)\\); print\\('EMAIL_HOST_USER =', repr\\(settings.EMAIL_HOST_USER\\)\\); print\\('CONTACT_NOTIFY_EMAIL =', settings.CONTACT_NOTIFY_EMAIL\\); import os; print\\('.env present in container =', os.path.exists\\('/app/.env'\\)\\)\")"
     ],
     "additionalDirectories": [
       "\\tmp"
